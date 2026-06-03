@@ -191,9 +191,12 @@ body {
 .audio.audio--off .audio-btn { background: #d9ccc0; box-shadow: none; }
 .audio-btn svg { width: 20px; height: 20px; fill: #fff; }
 .audio-main { flex: 1; min-width: 0; }
-.audio-track { height: 6px; background: rgba(255,255,255,.25); border-radius: 999px; overflow: hidden; }
-.audio.audio--off .audio-track { background: rgba(0,0,0,.08); }
-.audio-fill { height: 100%; width: 0; background: var(--honey); border-radius: 999px; }
+.audio-track { padding: 9px 0; cursor: pointer; touch-action: none; }       /* 上下留出手指好按的区域 */
+.audio-bar { height: 6px; background: rgba(255,255,255,.25); border-radius: 999px; position: relative; }
+.audio.audio--off .audio-bar { background: rgba(0,0,0,.1); }
+.audio-fill { height: 100%; width: 0; background: var(--honey); border-radius: 999px; position: relative; }
+.audio-fill::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }  /* 可拖动的小圆点 */
+.audio.audio--off .audio-fill::after { display: none; }
 .audio-meta { display: flex; justify-content: space-between; font-size: 11.5px; margin-top: 7px; opacity: .85; font-weight: 600; }
 .audio-hint { font-size: 12.5px; font-weight: 600; }
 

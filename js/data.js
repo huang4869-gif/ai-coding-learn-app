@@ -229,5 +229,7 @@ Object.assign(LESSONS['l5'], {
   ending: '能把想法说清楚，你就已经超过很多人了！恭喜你完成前 5 节，继续加油～',
 });
 
-// 把数据挂到全局，供 app.js 使用
-window.COURSE = { MODULES, LESSONS, total: _n };
+// 把数据挂到全局，供网页里的 app.js 使用
+if (typeof window !== 'undefined') window.COURSE = { MODULES, LESSONS, total: _n };
+// 也导出给 Node 脚本使用（配音生成脚本会读取课文）
+if (typeof module !== 'undefined' && module.exports) module.exports = { MODULES, LESSONS, total: _n };

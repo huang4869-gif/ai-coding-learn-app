@@ -10,7 +10,7 @@ const app = document.getElementById('app'); // 主内容区（也是滚动容器
 const KEY = 'aedu_v1';
 function load() {
   // 默认结构，读不到就用空的
-  const base = { completed: [], favorites: [], quizScores: {}, visitDays: [], lastLessonId: null };
+  const base = { completed: [], favorites: [], quizScores: {}, visitDays: [], lastLessonId: null, audioPos: {} };
   try { return Object.assign(base, JSON.parse(localStorage.getItem(KEY) || '{}')); }
   catch (e) { return base; }
 }
@@ -172,7 +172,7 @@ function viewLesson(id) {
     body = `<div class="audio" id="audio">
         <button class="audio-btn" data-action="toggle-audio" aria-label="播放">${ICON_PLAY}</button>
         <div class="audio-main">
-          <div class="audio-track"><div class="audio-fill" id="audioFill"></div></div>
+          <div class="audio-track" id="audioTrack"><div class="audio-bar"><div class="audio-fill" id="audioFill"></div></div></div>
           <div class="audio-meta"><span id="audioCur">0:00</span><span id="audioDur">${L.duration}:00</span></div>
         </div>
       </div>
@@ -250,9 +250,11 @@ function renderQuizResult() {
   </div>`;
 }
 
-/* ---------- 5) 音频播放器（点播放时才创建音频，页面里不放 audio 标签） ---------- */
-let audioObj = null;   // 当前的音频对象
-let audioFor = null;   // 当前音频对应哪一节课
+/* ---------- 5) 音频播放器：按需创建 + 可拖动进度 + 断点续听 ---------- */
+let audioObj = null;                 // 当前音频对象（点播放/拖动时才创建）
+let audioFor = null;                 // 当前音频属于哪一节
+let lastPosSave = 0;                 // 上次保存进度的时间戳（节流用）
+let seekState = { dragging: false }; // 是否正在拖动进度条
 
 function showAudioOff() {
   const box = document.getElementById('audio');
@@ -267,25 +269,76 @@ function setPlayIcon(playing) {
   const btn = box.querySelector('.audio-btn'); if (btn) btn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
   box.classList.toggle('is-playing', playing);
 }
+function updateAudioUI() {
+  if (!audioObj) return;
+  const f = document.getElementById('audioFill'), c = document.getElementById('audioCur');
+  if (f && audioObj.duration) f.style.width = (audioObj.currentTime / audioObj.duration * 100) + '%';
+  if (c) c.textContent = fmt(audioObj.currentTime);
+}
+// 按需创建音频对象，并接好各种事件（含断点续听）
+function ensureAudio(id) {
+  if (audioObj && audioFor === id) return audioObj;
+  if (audioObj) audioObj.pause();
+  const L = getLesson(id);
+  audioObj = new Audio();
+  audioFor = id;
+  audioObj.preload = 'metadata';
+  audioObj.src = L.audio;
+  audioObj.addEventListener('error', showAudioOff); // 没有 mp3 时优雅提示
+  audioObj.addEventListener('loadedmetadata', () => {
+    const d = document.getElementById('audioDur');
+    if (d && isFinite(audioObj.duration)) d.textContent = fmt(audioObj.duration);
+    const pos = state.audioPos[id];                 // 断点续听：恢复上次进度
+    if (pos && pos < audioObj.duration - 1) { audioObj.currentTime = pos; updateAudioUI(); }
+  });
+  audioObj.addEventListener('timeupdate', () => {
+    updateAudioUI();
+    const now = Date.now();                          // 节流保存进度（约每 3 秒）
+    if (now - lastPosSave > 3000) { lastPosSave = now; state.audioPos[id] = audioObj.currentTime; save(); }
+  });
+  audioObj.addEventListener('ended', () => {
+    setPlayIcon(false);
+    delete state.audioPos[id]; save();               // 听完清除断点，下次从头
+    toast('听完啦，做几道小测验巩固一下吧～');
+  });
+  return audioObj;
+}
 function toggleAudio() {
-  const id = current.param, L = getLesson(id);
-  const box = document.getElementById('audio');
-  if (!L || !box) return;
+  const id = current.param, box = document.getElementById('audio');
+  if (!getLesson(id) || !box) return;
   if (box.classList.contains('audio--off')) { toast('音频即将上线，先看文字版吧～'); return; }
-  // 第一次播放这节课时，临时创建音频对象
-  if (!audioObj || audioFor !== id) {
-    if (audioObj) audioObj.pause();
-    audioObj = new Audio();
-    audioFor = id;
-    audioObj.preload = 'none';
-    audioObj.src = L.audio;
-    audioObj.addEventListener('error', showAudioOff); // 没有 mp3 时优雅提示
-    audioObj.addEventListener('loadedmetadata', () => { const d = document.getElementById('audioDur'); if (d && isFinite(audioObj.duration)) d.textContent = fmt(audioObj.duration); });
-    audioObj.addEventListener('timeupdate', () => { const f = document.getElementById('audioFill'), c = document.getElementById('audioCur'); if (audioObj.duration && f) { f.style.width = (audioObj.currentTime / audioObj.duration * 100) + '%'; if (c) c.textContent = fmt(audioObj.currentTime); } });
-    audioObj.addEventListener('ended', () => { setPlayIcon(false); toast('听完啦，做几道小测验巩固一下吧～'); });
+  const a = ensureAudio(id);
+  if (a.paused) a.play().then(() => setPlayIcon(true)).catch(showAudioOff);
+  else { a.pause(); setPlayIcon(false); state.audioPos[id] = a.currentTime; save(); }
+}
+// 拖动/点击进度条跳转
+function seekToRatio(ratio) {
+  const id = current.param, box = document.getElementById('audio');
+  if (!box || box.classList.contains('audio--off')) return;
+  const a = ensureAudio(id);
+  ratio = Math.max(0, Math.min(1, ratio));
+  if (a.duration && isFinite(a.duration)) {
+    a.currentTime = ratio * a.duration;
+    updateAudioUI();
+    state.audioPos[id] = a.currentTime; save();
+  } else {
+    const f = document.getElementById('audioFill'); if (f) f.style.width = (ratio * 100) + '%';
   }
-  if (audioObj.paused) audioObj.play().then(() => setPlayIcon(true)).catch(showAudioOff);
-  else { audioObj.pause(); setPlayIcon(false); }
+}
+function seekRatio(e) {
+  const track = document.getElementById('audioTrack'); if (!track) return 0;
+  const rect = track.getBoundingClientRect();
+  const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+  return rect.width ? (clientX - rect.left) / rect.width : 0;
+}
+// 学习页渲染后：给进度条接上"按下拖动"，并显示上次进度
+function setupSeek(id) {
+  const track = document.getElementById('audioTrack');
+  if (!track) return;
+  track.onmousedown = (e) => { seekState.dragging = true; seekToRatio(seekRatio(e)); };
+  track.ontouchstart = (e) => { seekState.dragging = true; seekToRatio(seekRatio(e)); e.preventDefault(); };
+  const pos = state.audioPos[id];
+  if (pos) { const c = document.getElementById('audioCur'); if (c) c.textContent = fmt(pos); }
 }
 
 /* ---------- 6) 收藏开关 ---------- */
@@ -326,12 +379,13 @@ function render() {
   else if (v === 'lesson') html = viewLesson(p);
   else if (v === 'quiz') html = viewQuiz(p);
 
-  // 离开学习页时，暂停可能在播放的音频
-  if (v !== 'lesson' && audioObj) audioObj.pause();
+  // 离开学习页时，暂停并保存进度（只有真正听了才覆盖，避免把已存进度冲成 0）
+  if (v !== 'lesson' && audioObj) { audioObj.pause(); if (audioFor && audioObj.currentTime > 0) { state.audioPos[audioFor] = audioObj.currentTime; save(); } }
 
   app.innerHTML = '<div class="view">' + html + '</div>';
   app.scrollTop = 0; // 切页后回到顶部
 
+  if (v === 'lesson') setupSeek(p);
   if (v === 'quiz') initQuiz(p);
 }
 
@@ -359,5 +413,11 @@ document.getElementById('tabbar').addEventListener('click', (e) => {
 });
 
 /* ---------- 9) 启动 ---------- */
+// 进度条拖动：移动/松手在整个窗口监听（只注册一次，避免重复堆叠）
+window.addEventListener('mousemove', (e) => { if (seekState.dragging) seekToRatio(seekRatio(e)); });
+window.addEventListener('mouseup', () => { seekState.dragging = false; });
+window.addEventListener('touchmove', (e) => { if (seekState.dragging) { seekToRatio(seekRatio(e)); e.preventDefault(); } }, { passive: false });
+window.addEventListener('touchend', () => { seekState.dragging = false; });
+
 recordToday();
 go('today');

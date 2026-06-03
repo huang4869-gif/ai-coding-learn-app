@@ -1,0 +1,8 @@
+{
+  "_说明": "把本文件复制一份改名为 volc-config.json，然后填好下面 token 和 voice_type 两项即可。volc-config.json 已被 .gitignore 忽略，不会上传到公开仓库。",
+  "appid": "1567866324",
+  "token": "把你的 Access Token 粘到这里",
+  "cluster": "volcano_tts",
+  "voice_type": "把你挑的音色ID粘到这里，例如 zh_female_cancan_mars_bigtts",
+  "speed_ratio": 1.0
+}
