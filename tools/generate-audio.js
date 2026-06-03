@@ -60,10 +60,15 @@ function chunkText(text, max) {
 
 // 调用火山 TTS，返回这段文字的 mp3 数据
 async function tts(text) {
+  // 音频参数：可在 volc-config.json 调"语速/音调/音量/情感"，让声音更自然、不那么 AI
+  const audio = { voice_type: cfg.voice_type, encoding: 'mp3', speed_ratio: cfg.speed_ratio || 1.0 };
+  if (cfg.pitch_ratio && cfg.pitch_ratio !== 1) audio.pitch_ratio = cfg.pitch_ratio;                 // 音调：<1 更低沉沉稳，>1 更尖
+  if (cfg.loudness_ratio && cfg.loudness_ratio !== 1) audio.loudness_ratio = cfg.loudness_ratio;     // 音量
+  if (cfg.emotion) { audio.emotion = cfg.emotion; audio.enable_emotion = true; }                     // 情感（需音色支持）
   const body = {
     app: { appid: cfg.appid, token: cfg.token, cluster: cfg.cluster || 'volcano_tts' },
     user: { uid: 'ai-learn-app' },
-    audio: { voice_type: cfg.voice_type, encoding: 'mp3', speed_ratio: cfg.speed_ratio || 1.0 },
+    audio: audio,
     request: { reqid: crypto.randomUUID(), text: text, operation: 'query' },
   };
   const res = await fetch('https://openspeech.bytedance.com/api/v1/tts', {

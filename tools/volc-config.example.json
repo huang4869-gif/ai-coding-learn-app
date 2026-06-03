@@ -1,8 +1,10 @@
 {
-  "_说明": "把本文件复制一份改名为 volc-config.json，然后填好下面 token 和 voice_type 两项即可。volc-config.json 已被 .gitignore 忽略，不会上传到公开仓库。",
+  "_说明": "复制本文件为 volc-config.json 并填好 token、voice_type。volc-config.json 已被 .gitignore 忽略，不会上传。下面几个比例项可调声音效果：speed_ratio 语速(0.8~1.2，越小越慢)、pitch_ratio 音调(0.9~1.1，越小越低沉)、loudness_ratio 音量。都为 1.0 表示默认。",
   "appid": "1567866324",
   "token": "把你的 Access Token 粘到这里",
   "cluster": "volcano_tts",
   "voice_type": "把你挑的音色ID粘到这里，例如 zh_female_cancan_mars_bigtts",
-  "speed_ratio": 1.0
+  "speed_ratio": 1.0,
+  "pitch_ratio": 1.0,
+  "loudness_ratio": 1.0
 }
