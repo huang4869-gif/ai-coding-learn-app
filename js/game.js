@@ -50,6 +50,40 @@ function m5(cls) {
   </svg>`;
 }
 
+/* ---------- 新手引导（首次打开，3 屏，小五讲，可跳过） ---------- */
+const SLIDES = [
+  { t: '嗨，我是小五！👋', b: '<b>AI 时代来了</b>——会用 AI 干活的人，做事更快、也更吃香。好消息是：<b>你不用懂代码，也能学会。</b>' },
+  { t: '像玩游戏一样学', b: '我会一关一关带你玩，碎片时间就能学，<b>答错也没关系</b>——玩着玩着，你就懂了。' },
+  { t: '学完你能做到', b: '看懂"前端、后端、API"这些词、会<b>指挥 AI 帮你做东西</b>、甚至自己做出一个小网页。准备好了吗？' },
+];
+let introI = 0;
+function viewIntro() {
+  const s = SLIDES[introI], last = introI === SLIDES.length - 1;
+  return `<div class="intro">
+    <button class="skip" data-act="intro-skip">跳过</button>
+    <div class="intro-card">
+      ${m5('hero')}
+      <h2 class="intro-t">${s.t}</h2>
+      <p class="intro-b">${s.b}</p>
+    </div>
+    <div class="dots">${SLIDES.map((_, i) => `<span class="dot ${i === introI ? 'on' : ''}"></span>`).join('')}</div>
+    <button class="cta" data-act="intro-next">${last ? '开始吧！🎉' : '下一步 →'}</button>
+  </div>`;
+}
+function finishIntro() { gs.onboarded = true; gsave(); introI = 0; go('home'); }
+function setupIntroSwipe() {
+  const el = document.querySelector('.intro'); if (!el) return;
+  let x0 = null;
+  el.ontouchstart = (e) => { x0 = e.touches[0].clientX; };
+  el.ontouchend = (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (dx < -40) { if (introI < SLIDES.length - 1) { introI++; render(); } else finishIntro(); }
+    else if (dx > 40 && introI > 0) { introI--; render(); }
+    x0 = null;
+  };
+}
+
 /* ---------- 主页 ---------- */
 function viewHome() {
   const st = streak(), xp = gs.xp || 0, lv = levelNo();
@@ -242,13 +276,14 @@ let cur = { view: 'home' };
 function go(view, param) { cur = { view: view, param: param }; render(); }
 function render() {
   const frame = document.querySelector('.app-frame');
-  frame.classList.toggle('gimmersive', cur.view === 'level' || cur.view === 'result');
+  frame.classList.toggle('gimmersive', cur.view === 'level' || cur.view === 'result' || cur.view === 'intro');
   document.querySelectorAll('.gtab').forEach((t) => t.classList.toggle('is-active', t.dataset.tab === cur.view));
-  const html = cur.view === 'home' ? viewHome() : cur.view === 'map' ? viewMap()
+  const html = cur.view === 'intro' ? viewIntro() : cur.view === 'home' ? viewHome() : cur.view === 'map' ? viewMap()
     : cur.view === 'profile' ? viewProfile() : cur.view === 'level' ? viewLevel(cur.param) : viewResult(cur.param);
   app.innerHTML = '<div class="gview">' + html + '</div>';
   app.scrollTop = 0;
   if (cur.view === 'level') startLevel(cur.param);
+  if (cur.view === 'intro') setupIntroSwipe();
 }
 
 app.addEventListener('click', (e) => {
@@ -260,9 +295,11 @@ app.addEventListener('click', (e) => {
   else if (a === 'pick') pick(+el.dataset.i);
   else if (a === 'exnext') { ex.i++; renderExercise(); }
   else if (a === 'm') matchTap(el);
+  else if (a === 'intro-next') { if (introI < SLIDES.length - 1) { introI++; render(); } else finishIntro(); }
+  else if (a === 'intro-skip') finishIntro();
 });
 document.getElementById('gnav').addEventListener('click', (e) => { const b = e.target.closest('.gtab'); if (b) go(b.dataset.tab); });
 
 /* ---------- 启动：从主页进入 ---------- */
 recordDay();
-go('home');
+go(gs.onboarded ? 'home' : 'intro');
