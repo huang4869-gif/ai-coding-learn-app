@@ -80,8 +80,13 @@ function viewHome() {
 /* ---------- 关卡地图 ---------- */
 function mascotMapLine() {
   const st = streak(), rec = nextLevel();
-  const allDone = allLevelIds().filter((id) => G.levels[id].ready).every((id) => gs.done[id]);
-  if (allDone) return `这一章你都通关啦，太强了！其余关卡<b>马上上线</b>～`;
+  const readyDone = allLevelIds().filter((id) => G.levels[id].ready).every((id) => gs.done[id]);
+  const moreComing = allLevelIds().some((id) => !G.levels[id].ready);
+  if (readyDone) {
+    return moreComing
+      ? `这几关都过啦，真棒！后面几关小五<b>正在备课</b>，马上上线～`
+      : `全部通关，你太强了！🎉`;
+  }
   return `${st > 1 ? `连续 <b>${st}</b> 天，棒！` : '来吧！'}下一关：<b>${G.levels[rec].title}</b>`;
 }
 function viewMap() {
@@ -91,7 +96,7 @@ function viewMap() {
     <span class="chip lvl">Lv.${levelNo()}</span>
   </div>`;
   G.chapters.forEach((c) => {
-    html += `<div class="chapter">${c.title}</div><div class="path">`;
+    html += `<div class="chapter">${c.title}</div><div class="path"><span class="pdecor pd1">🌱</span><span class="pdecor pd2">✨</span><span class="pdecor pd3">⭐</span>`;
     c.levels.forEach((id, idx) => {
       const L = G.levels[id], done = gs.done[id], unlocked = isUnlocked(id);
       const cls = done ? 'done' : (unlocked && L.ready ? 'cur' : 'lock');
