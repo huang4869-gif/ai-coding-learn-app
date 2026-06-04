@@ -51,22 +51,53 @@ function m5(cls) {
 }
 
 /* ---------- 新手引导（首次打开，3 屏，小五讲，可跳过） ---------- */
+// 小五的脸（SVG 组，放进插画场景里）。把中心放到 (cx,cy)，按 s 缩放
+function m5g(cx, cy, s) {
+  const tx = cx - 32 * s, ty = cy - 32 * s;
+  return `<g transform="translate(${tx},${ty}) scale(${s})">
+    <circle cx="32" cy="32" r="30" fill="#ffc062"/><circle cx="32" cy="34" r="24" fill="#ff8a5b"/>
+    <ellipse cx="21" cy="39.5" rx="4.2" ry="2.6" fill="#ff4d73" opacity=".45"/><ellipse cx="43" cy="39.5" rx="4.2" ry="2.6" fill="#ff4d73" opacity=".45"/>
+    <circle cx="24" cy="30" r="5.3" fill="#fff"/><circle cx="40" cy="30" r="5.3" fill="#fff"/>
+    <circle cx="25" cy="31" r="2.5" fill="#41342c"/><circle cx="41" cy="31" r="2.5" fill="#41342c"/>
+    <circle cx="23.3" cy="29.4" r="1.1" fill="#fff"/><circle cx="39.3" cy="29.4" r="1.1" fill="#fff"/>
+    <path d="M25 41 q7 7.5 14 0" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></g>`;
+}
+// 三屏插画场景
+const SCENES = {
+  s1: `<svg viewBox="0 0 300 220" class="scene"><circle cx="150" cy="106" r="86" fill="#fff" opacity=".32"/>
+    <g transform="translate(22,26)"><rect width="60" height="46" rx="15" fill="#fff"/><text x="30" y="33" font-size="24" text-anchor="middle">💬</text></g>
+    <g transform="translate(218,20)"><rect width="58" height="46" rx="15" fill="#fff"/><text x="29" y="33" font-size="24" text-anchor="middle">✨</text></g>
+    <g transform="translate(222,136)"><rect width="56" height="44" rx="14" fill="#fff"/><text x="28" y="31" font-size="22" text-anchor="middle">⭐</text></g>
+    <g transform="translate(16,138)"><rect width="68" height="44" rx="14" fill="#41342c"/><text x="34" y="30" font-size="17" font-weight="800" fill="#fff" text-anchor="middle" font-family="monospace">&lt;/&gt;</text></g>
+    ${m5g(150, 104, 1.55)}</svg>`,
+  s2: `<svg viewBox="0 0 300 220" class="scene">
+    <path d="M62 196 C 74 150, 150 162, 150 116 C 150 76, 228 90, 234 46" stroke="#f0deca" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <text x="98" y="84" font-size="17">✨</text><text x="198" y="24" font-size="20">⭐</text>
+    <circle cx="150" cy="116" r="27" fill="#57bd89" stroke="#fff" stroke-width="5"/><text x="150" y="126" font-size="25" text-anchor="middle" fill="#fff" font-weight="800">✓</text>
+    <circle cx="234" cy="46" r="24" fill="#ff8a5b" stroke="#fff" stroke-width="5"/><text x="234" y="55" font-size="20" text-anchor="middle">🎯</text>
+    ${m5g(60, 182, 1.2)}</svg>`,
+  s3: `<svg viewBox="0 0 300 220" class="scene">
+    <rect x="98" y="20" width="116" height="178" rx="24" fill="#41342c"/><rect x="106" y="34" width="100" height="150" rx="12" fill="#fff"/>
+    <rect x="112" y="42" width="88" height="22" rx="7" fill="#ff8a5b"/><circle cx="156" cy="92" r="15" fill="#ffd79b"/>
+    <rect x="126" y="114" width="60" height="9" rx="4" fill="#e7d6c4"/><rect x="120" y="130" width="72" height="6" rx="3" fill="#efe2d3"/><rect x="120" y="142" width="72" height="6" rx="3" fill="#efe2d3"/>
+    <rect x="132" y="160" width="48" height="16" rx="8" fill="#6fc59b"/>
+    <text x="58" y="56" font-size="20">✨</text><text x="228" y="158" font-size="18">⭐</text>
+    ${m5g(52, 150, 1.2)}</svg>`,
+};
 const SLIDES = [
-  { t: '嗨，我是小五！👋', b: '<b>AI 时代来了</b>——会用 AI 干活的人，做事更快、也更吃香。好消息是：<b>你不用懂代码，也能学会。</b>' },
-  { t: '像玩游戏一样学', b: '我会一关一关带你玩，碎片时间就能学，<b>答错也没关系</b>——玩着玩着，你就懂了。' },
-  { t: '学完你能做到', b: '看懂"前端、后端、API"这些词、会<b>指挥 AI 帮你做东西</b>、甚至自己做出一个小网页。准备好了吗？' },
+  { scene: 's1', t: '嗨，我是小五！👋', b: '<b>AI 时代来了</b>——会用 AI 干活的人，做事更快、也更吃香。好消息是：<b>你不用懂代码，也能学会。</b>' },
+  { scene: 's2', t: '像玩游戏一样学', b: '我会一关一关带你玩，碎片时间就能学，<b>答错也没关系</b>——玩着玩着，你就懂了。' },
+  { scene: 's3', t: '学完你能做到', b: '看懂"前端、后端、API"这些词、会<b>指挥 AI 帮你做东西</b>、甚至自己做出一个小网页。准备好了吗？' },
 ];
 let introI = 0;
 function viewIntro() {
-  const s = SLIDES[introI], last = introI === SLIDES.length - 1;
-  return `<div class="intro">
+  const i = introI, s = SLIDES[i], last = i === SLIDES.length - 1;
+  return `<div class="intro s${i + 1}">
     <button class="skip" data-act="intro-skip">跳过</button>
-    <div class="intro-card">
-      ${m5('hero')}
-      <h2 class="intro-t">${s.t}</h2>
-      <p class="intro-b">${s.b}</p>
-    </div>
-    <div class="dots">${SLIDES.map((_, i) => `<span class="dot ${i === introI ? 'on' : ''}"></span>`).join('')}</div>
+    <div class="blob ib1"></div><div class="blob ib2"></div>
+    <div class="intro-scene">${SCENES[s.scene]}</div>
+    <div class="intro-txt"><h2 class="intro-t">${s.t}</h2><p class="intro-b">${s.b}</p></div>
+    <div class="dots">${SLIDES.map((_, k) => `<span class="dot ${k === i ? 'on' : ''}"></span>`).join('')}</div>
     <button class="cta" data-act="intro-next">${last ? '开始吧！🎉' : '下一步 →'}</button>
   </div>`;
 }

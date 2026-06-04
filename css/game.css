@@ -27,17 +27,27 @@
 .cta.ghost { background: #fff; color: var(--primary-deep); box-shadow: 0 5px 0 #efe0d2, 0 10px 18px rgba(208, 120, 70, .12); margin-top: 12px; }
 .cta.ghost:active { transform: translateY(4px); box-shadow: 0 1px 0 #efe0d2; }
 
-/* ---------- 新手引导（首次打开） ---------- */
-.intro { display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 82vh; position: relative; padding-top: 18px; }
-.skip { position: absolute; top: 0; right: 0; background: none; border: none; color: var(--ink-faint); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 6px 4px; }
-.intro-card { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 16px 8px; }
-.intro-t { font-size: 25px; font-weight: 800; margin-top: 16px; }
-.intro-b { font-size: 16px; line-height: 1.75; color: var(--ink-soft); max-width: 300px; margin-top: 8px; }
+/* ---------- 新手引导（全屏插画场景） ---------- */
+.intro { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 86vh; overflow: hidden;
+  margin: calc(-1 * (env(safe-area-inset-top, 0px) + 12px)) -18px 0;   /* 顶满 #gapp 的内边距，做整屏铺色 */
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 22px 14px; }
+.intro.s1 { background: linear-gradient(180deg, #fff2dc 0%, #ffe4cf 100%); }
+.intro.s2 { background: linear-gradient(180deg, #e9f7ee 0%, #ffe7d3 100%); }
+.intro.s3 { background: linear-gradient(180deg, #e9f1fb 0%, #ffe7d6 100%); }
+.intro .blob { z-index: 0; opacity: .5; }
+.intro .ib1 { width: 160px; height: 160px; top: 24px; left: -36px; background: #ffd49a; }
+.intro .ib2 { width: 130px; height: 130px; bottom: 130px; right: -34px; background: #ffbda4; }
+.skip { position: absolute; top: 12px; right: 12px; z-index: 3; background: rgba(255, 255, 255, .65); border: none; color: var(--ink-soft); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 7px 14px; border-radius: 999px; }
+.intro-scene { position: relative; z-index: 1; width: 100%; max-width: 320px; margin: 10px auto 4px; }
+.intro-scene .scene { width: 100%; height: auto; display: block; filter: drop-shadow(0 12px 20px rgba(208, 120, 70, .2)); }
+.intro-txt { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 4px; }
+.intro-t { font-size: 27px; font-weight: 800; letter-spacing: -.3px; }
+.intro-b { font-size: 16px; line-height: 1.75; color: #6b5848; max-width: 300px; margin: 12px auto 0; }
 .intro-b b { color: var(--primary-deep); }
-.dots { display: flex; gap: 8px; margin: 16px 0 18px; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: #e7d6c4; transition: .25s; }
-.dot.on { width: 26px; border-radius: 999px; background: var(--primary); }
-.intro .cta { max-width: 360px; }
+.dots { display: flex; gap: 8px; margin: 14px 0 16px; position: relative; z-index: 1; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(65, 52, 44, .16); transition: .25s; }
+.dot.on { width: 28px; border-radius: 999px; background: var(--primary); }
+.intro .cta { max-width: 360px; position: relative; z-index: 1; margin-bottom: 4px; }
 
 /* ---------- 主页 ---------- */
 .hero { position: relative; text-align: center; padding: 18px 8px 8px; overflow: hidden; }
