@@ -4,6 +4,9 @@ tools/volc-config.json
 # 试听样片（临时挑音色用，不上线）
 audio/samples/
 
+# 概念草图（设计用，不上线）
+mockups/
+
 # 其他
 node_modules/
 .DS_Store
